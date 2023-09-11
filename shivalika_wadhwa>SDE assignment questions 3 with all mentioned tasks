@@ -1,0 +1,104 @@
+# code for movie is :-
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+void main() {
+  runApp(MaterialApp(
+    home: HomePage(),
+  ));
+}
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+class _HomePageState extends State<HomePage> {
+  int page = 1;
+  List<Movie> movies = [];
+  @override
+  void initState() {
+    super.initState();
+    fetchMovies();
+  }
+  Future<void> fetchMovies() async {
+    final response = await mostrated?api_movie.db&page=$page');
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      List<Movie> fetchedMovies = [];
+      for (var movie in data['results']) {
+        fetchedMovies.add(Movie(
+          year: movie['release_date'].split('-')[0],
+          rating: movie['vote_average'].toString(),
+        ));
+      }
+      setState(() {
+        movies.addAll(fetchedMovies);
+        page++;
+      });
+    } else {
+      throw Exception('Failed to fetch movies');
+    }
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Movie Search'),
+      ),
+      body: ListView.builder(
+        itemCount: movies.length + 1,
+        itemBuilder: (context, index) {
+          if (index == movies.length) {
+            return Center(
+              child: RaisedButton(
+                onPressed: fetchMovies,
+                child: Text('Load More'),
+              ),
+            );
+          }
+          return ListTile(
+            leading: Image.network(movies[index].poster),
+            title: Text(movies[index].title),
+            subtitle: Text('${movies[index].year}, ${movies[index].rating}'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MovieDetailPage(movie: movies[index]),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+class Movie {
+  final String title;
+  final String poster;
+  final String year;
+  final String rating;
+  Movie({this.title, this.poster, this.year, this.rating});
+}
+class MovieDetailPage extends StatelessWidget {
+  final Movie movie;
+  MovieDetailPage({this.movie});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(movie.title),
+      ),
+      body: Column(
+        children: [
+          Image.network(movie.png),
+          SizedBox(height: 10),
+          Text('Year: ${movie.year}'),
+          Text('Rating: ${movie.rating}'),
+        ],
+      ),
+    );
+  }
+}
